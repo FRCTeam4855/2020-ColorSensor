@@ -8,35 +8,32 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import com.revrobotics.ColorSensorV3;
 
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
-  private final I2C.Port i2cPort = I2C.Port.kOnboard;
 
+  private final I2C.Port i2cPort = I2C.Port.kOnboard;
   private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
 
   int rotation = 0;
   int partialTurn = 0;
-  
+
   public enum COLOR {
     Red, Yellow, Blue, Green, None
   }
   COLOR currentColor = COLOR.None;  // the color that the sensor was
   COLOR pastColor = COLOR.None;     // the color that the sensor is
   Color detectedColor;              // the color that the sensor is actively reading
+  Spark motor = new Spark(0);
 
   @Override
   public void robotInit() {
-    
   }
 
   @Override
@@ -49,112 +46,48 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Red", detectedColor.red);
     SmartDashboard.putNumber("Green", detectedColor.green);
     SmartDashboard.putNumber("Blue", detectedColor.blue);
-
-    if(detectedColor.red >= 0.34 && detectedColor.green <=.4) {
+    SmartDashboard.putNumber("Proximity", proximity);
+    
+    if(detectedColor.red >= 0.34 && detectedColor.green <=.45) {
       SmartDashboard.putString("Color", "Red");
       pastColor = currentColor;
       currentColor = COLOR.Red;
     } 
-     if(detectedColor.green >= 0.52) {
+     if(detectedColor.green >= 0.50 && detectedColor.red <= .23) {
         SmartDashboard.putString("Color", "Green");
         pastColor = currentColor;
         currentColor = COLOR.Green;
   } 
-   if(detectedColor.blue >= 0.335 && detectedColor.green <= 1 ) {
+   if(detectedColor.blue >= 0.345 && detectedColor.green <= .50 ) {
         SmartDashboard.putString("Color", "Blue");
         pastColor = currentColor;
         currentColor = COLOR.Blue;
    }
-    if(detectedColor.blue >= 0.13 && detectedColor.green <= 0.55 && detectedColor.red >= 0.285 && detectedColor.red <= .4) {
+    if(detectedColor.blue >= 0.14 && detectedColor.green >= .52 && detectedColor.green <= 0.54 && detectedColor.red >= 0.29 && detectedColor.red <= .31) {
         SmartDashboard.putString("Color", "Yellow");
         pastColor = currentColor;
         currentColor = COLOR.Yellow;
     } 
-    if (currentColor != pastColor && pastColor != COLOR.None) {
-      // The color has changed, add to rotation count
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-        partialTurn = 0; 
-      }
-
-    }
-   /* if(currentColor == COLOR.Red && pastColor != Red) {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-      }
-    }
-
-    if(currentColor == Red && pastColor == Green)  {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-      }
-    }
-
-     if(currentColor == Blue && pastColor == Green) {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-      }
-    }
-
-    if(currentColor == Blue && pastColor == Yellow) {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-      }
-    }
-
-     if(currentColor == Green && pastColor == Blue) {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-        partialTurn = 0;
-      }
-    }
-
-    if(currentColor == Green && pastColor ==  Red)  {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-        partialTurn = 0;
-      }
-    }
-
-    if(currentColor == Yellow && pastColor == Red) {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-        partialTurn = 0;
-      }
-    }
-    if(currentColor ==  Yellow && pastColor == Blue)  {
-      partialTurn ++;
-      if(partialTurn > 7) {
-        rotation ++;
-        partialTurn = 0;
-      }
-    }
-  
-     
-    */
-  
-  
-
-//SmartDashboard.putString("Color");
     
-  double proximity = m_colorSensor.getProximity();
+      if (currentColor != pastColor && pastColor != COLOR.None) {
+      partialTurn ++;
+      }
+      if(partialTurn > 7) {
+        rotation ++;
+        partialTurn = 0;
+      }
+      motor.set(.1);
 
-    SmartDashboard.putNumber("Proximity", proximity);
-  }
+      }
+    
+    double proximity = m_colorSensor.getProximity();
+
+   
+  
 
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
+    
   }
 
   /**
@@ -162,15 +95,11 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
+  }
+
+  @Override
+  public void teleopInit() {
+   
   }
 
   /**
@@ -178,6 +107,47 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    String gameData;
+    gameData = DriverStation.getInstance().getGameSpecificMessage();
+    if(gameData.length() > 0)
+    {
+      switch (gameData.charAt(0))
+      {
+        case 'B' :
+      
+       if (rotation == 3 && currentColor == COLOR.Red){
+       motor.set(0);
+       rotation = 0; 
+       }
+      
+       SmartDashboard.putNumber("Color Changes", partialTurn);
+          break;
+        case 'G' :
+        if (rotation == 3 && currentColor == COLOR.Yellow){
+          motor.set(0);
+          rotation = 0; 
+          }
+          break;
+        case 'R' :
+        if (rotation == 3 && currentColor == COLOR.Blue){
+          motor.set(0);
+          rotation = 0; 
+          }
+          break;
+        case 'Y' :
+        if (rotation == 3 && currentColor == COLOR.Green){
+          motor.set(0);
+          rotation = 0; 
+          }
+          break;
+        default :
+          //This is corrupt data
+          break;
+      }
+    } else {
+      //Code for no data received yet
+    }
+      
   }
 
   /**
