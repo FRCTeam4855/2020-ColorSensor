@@ -19,7 +19,7 @@ import com.revrobotics.ColorSensorV3;
 
 public class Robot extends TimedRobot {
 
-  public final I2C.Port i2cPort = I2C.Port.kMXP; //CODY did cut the CAN wire - Bernie Sanders
+  public final I2C.Port i2cPort = I2C.Port.kMXP;
   public final I2C.Port i2cPort2 = I2C.Port.kOnboard; 
   public final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
   public final ColorSensorV3 m_colourSensor = new ColorSensorV3(i2cPort2);
@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
   boolean Fs2 = false;
   boolean Cellseen = false;
 
-  Joystick Controller = new Joystick(1); //"Cody Sucks." - Cody
+  Joystick Controller = new Joystick(1);
 
   public enum COLOR {
     Red, Yellow, Blue, Green, None , PowerCELL
@@ -53,12 +53,11 @@ public class Robot extends TimedRobot {
     detectedColor = m_colorSensor.getColor();
     detectedColour = m_colourSensor.getColor();
     SmartDashboard.putNumber("Rotations", rotation);
-    SmartDashboard.putNumber("Red", detectedColour.red); //The computer is stupid
-    SmartDashboard.putNumber("Green", detectedColour.green); //JACOB KACZMAREK WAS HERE
+    SmartDashboard.putNumber("Red", detectedColour.red);
+    SmartDashboard.putNumber("Green", detectedColour.green);
     SmartDashboard.putNumber("Blue", detectedColour.blue);
     SmartDashboard.putNumber("Proximity", proximity);
     SmartDashboard.putNumber("Color Changes", partialTurn);
-    //SmartDashboard.putString("PowerCell?", "Hecky Wecky No");
     SmartDashboard.putNumber("PowerCellCounter", Numberball);
   
 
@@ -95,7 +94,6 @@ public class Robot extends TimedRobot {
         Fs2 = true;
       } */
       if(detectedColour.blue >= 0.11 && detectedColour.green >= .45 && detectedColour.green <= 0.55 && detectedColour.red >= 0.28 && detectedColour.red <= .34 && Fs2 == false) {
-        //SmartDashboard.putString("PowerCell?", "UwU OwO Yeah");
         currentColor = COLOR.PowerCELL; 
         Numberball ++;
         Cellseen = true;
@@ -105,7 +103,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("PowerCell?", true);
       }
       if(detectedColour.blue <=.11 || detectedColour.green <= .45 || detectedColour.green >= .55 || detectedColour.red <= .28 || detectedColour.red >= .34){
-        Fs2 = false; //Is this the Krust Krab? No, this is Patrick Callaghan.
+        Fs2 = false;
         Cellseen = false;
         SmartDashboard.putBoolean("PowerCell?", false);
       }
