@@ -13,41 +13,55 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 
 import com.revrobotics.ColorSensorV3;
 
 public class Robot extends TimedRobot {
 
-  private final I2C.Port i2cPort = I2C.Port.kOnboard;
-  private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
-
-  int rotation = 0;
+  public final I2C.Port i2cPort = I2C.Port.kMXP; //CODY did cut the CAN wire - Bernie Sanders
+  public final I2C.Port i2cPort2 = I2C.Port.kOnboard; 
+  public final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
+  public final ColorSensorV3 m_colourSensor = new ColorSensorV3(i2cPort2);
+  int rotation = 0; 
   int partialTurn = 0;
+  int Failsafe = 0;
+  boolean B = false;
+  int Numberball = 0;
+  boolean Fs2 = false;
+  boolean Cellseen = false;
+
+  Joystick Controller = new Joystick(1); //"Cody Sucks." - Cody
 
   public enum COLOR {
-    Red, Yellow, Blue, Green, None
+    Red, Yellow, Blue, Green, None , PowerCELL
   }
-  COLOR currentColor = COLOR.None;  // the color that the sensor was
-  COLOR pastColor = COLOR.None;     // the color that the sensor is
+  COLOR currentColor = COLOR.None; 
+  COLOR currentColour = COLOR.None; // the color the that sensor is
+  COLOR pastColor = COLOR.None;     // that color the the sensor was
   Color detectedColor;              // the color that the sensor is actively reading
+  Color detectedColour;
   Spark motor = new Spark(0);
-
+  
   @Override
   public void robotInit() {
   }
-
+ 
   @Override
   public void robotPeriodic() {
 
     detectedColor = m_colorSensor.getColor();
-
+    detectedColour = m_colourSensor.getColor();
     SmartDashboard.putNumber("Rotations", rotation);
-    SmartDashboard.putNumber("Color Changes", partialTurn);
-    SmartDashboard.putNumber("Red", detectedColor.red);
-    SmartDashboard.putNumber("Green", detectedColor.green);
-    SmartDashboard.putNumber("Blue", detectedColor.blue);
+    SmartDashboard.putNumber("Red", detectedColour.red); //The computer is stupid
+    SmartDashboard.putNumber("Green", detectedColour.green); //JACOB KACZMAREK WAS HERE
+    SmartDashboard.putNumber("Blue", detectedColour.blue);
     SmartDashboard.putNumber("Proximity", proximity);
-    
+    SmartDashboard.putNumber("Color Changes", partialTurn);
+    //SmartDashboard.putString("PowerCell?", "Hecky Wecky No");
+    SmartDashboard.putNumber("PowerCellCounter", Numberball);
+  
+
     if(detectedColor.red >= 0.34 && detectedColor.green <=.45) {
       SmartDashboard.putString("Color", "Red");
       pastColor = currentColor;
@@ -68,18 +82,34 @@ public class Robot extends TimedRobot {
         pastColor = currentColor;
         currentColor = COLOR.Yellow;
     } 
-    
       if (currentColor != pastColor && pastColor != COLOR.None) {
       partialTurn ++;
       }
+      
       if(partialTurn > 7) {
         rotation ++;
         partialTurn = 0;
       }
-      motor.set(.1);
 
+      /*if(currentColor != COLOR.None && currentColor != COLOR.PowerCELL) {
+        Fs2 = true;
+      } */
+      if(detectedColour.blue >= 0.11 && detectedColour.green >= .45 && detectedColour.green <= 0.55 && detectedColour.red >= 0.28 && detectedColour.red <= .34 && Fs2 == false) {
+        //SmartDashboard.putString("PowerCell?", "UwU OwO Yeah");
+        currentColor = COLOR.PowerCELL; 
+        Numberball ++;
+        Cellseen = true;
+      } 
+      if(Cellseen = true) {
+        Fs2 = true;
+        SmartDashboard.putBoolean("PowerCell?", true);
       }
-    
+      if(detectedColour.blue <=.11 || detectedColour.green <= .45 || detectedColour.green >= .55 || detectedColour.red <= .28 || detectedColour.red >= .34){
+        Fs2 = false; //Is this the Krust Krab? No, this is Patrick Callaghan.
+        Cellseen = false;
+        SmartDashboard.putBoolean("PowerCell?", false);
+      }
+    }
     double proximity = m_colorSensor.getProximity();
 
    
@@ -107,6 +137,13 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    Controller.getRawButton(2);
+    if(Controller.getRawButton(2) == true && Failsafe == 0) {
+     motor.set(1);
+    }
+    if(Controller.getRawButton(2) == false && Failsafe == 0) {
+      motor.set(0);
+     }
     String gameData;
     gameData = DriverStation.getInstance().getGameSpecificMessage();
     if(gameData.length() > 0)
@@ -114,30 +151,35 @@ public class Robot extends TimedRobot {
       switch (gameData.charAt(0))
       {
         case 'B' :
-      
-       if (rotation == 3 && currentColor == COLOR.Red){
-       motor.set(0);
-       rotation = 0; 
-       }
-      
-       SmartDashboard.putNumber("Color Changes", partialTurn);
+         if (rotation == 3 && currentColor == COLOR.Red){
+          rotation = 0; 
+          partialTurn = 0;
+          motor.set(0);
+          Failsafe = 1;
+          }
           break;
         case 'G' :
         if (rotation == 3 && currentColor == COLOR.Yellow){
-          motor.set(0);
           rotation = 0; 
+          partialTurn = 0;
+          motor.set(0);
+          Failsafe = 1;
           }
           break;
         case 'R' :
         if (rotation == 3 && currentColor == COLOR.Blue){
-          motor.set(0);
           rotation = 0; 
+          partialTurn = 0;
+          motor.set(0);
+          Failsafe = 1;
           }
           break;
         case 'Y' :
         if (rotation == 3 && currentColor == COLOR.Green){
-          motor.set(0);
           rotation = 0; 
+          partialTurn = 0; 
+          motor.set(0);
+          Failsafe = 1;
           }
           break;
         default :
@@ -146,9 +188,9 @@ public class Robot extends TimedRobot {
       }
     } else {
       //Code for no data received yet
-    }
-      
+    } 
   }
+
 
   /**
    * This function is called periodically during test mode.
